@@ -1,7 +1,7 @@
 import React, { useMemo, useState, useEffect } from "react";
 import { 
   Building2, Search, ChevronLeft, ChevronRight, 
-  ArrowUpDown, LayoutList, Leaf, BarChart3, CheckCircle2, Calendar
+  ArrowUpDown, CheckCircle2, Calendar
 } from "lucide-react";
 
 import verraData from "./data/verra_retirements.json";
@@ -114,7 +114,7 @@ const extractBuyer = (text = "") => {
 };
 
 // Legacy alias for compatibility
-const extractOnBehalf = extractBuyer;
+
 
 // Format date for display: "Oct 27, 2025"
 const formatFullDate = (dateStr) => {
