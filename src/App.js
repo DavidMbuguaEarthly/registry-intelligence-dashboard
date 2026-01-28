@@ -1,11 +1,9 @@
 import React, { useMemo, useState, useEffect } from "react";
 import {
   Building2, Search, ChevronLeft, ChevronRight,
-<<<<<<< HEAD
-  ArrowUpDown, CheckCircle2, Calendar
-=======
+
   ArrowUpDown, CheckCircle2, Calendar, Download
->>>>>>> 96325aa (export to CSV function)
+
 } from "lucide-react";
 
 import verraData from "./data/verra_retirements.json";
