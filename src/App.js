@@ -1,17 +1,20 @@
 import React, { useMemo, useState, useEffect } from "react";
-import { 
-  Building2, Search, ChevronLeft, ChevronRight, 
+import {
+  Building2, Search, ChevronLeft, ChevronRight,
+<<<<<<< HEAD
   ArrowUpDown, CheckCircle2, Calendar
+=======
+  ArrowUpDown, CheckCircle2, Calendar, Download
+>>>>>>> 96325aa (export to CSV function)
 } from "lucide-react";
 
 import verraData from "./data/verra_retirements.json";
 import carData from "./data/climate_action_reserve_retirements.json";
 
 /**
- * V7.3 – FINAL POLISHED RELEASE
- * ✅ Fixed: Invalid JS quotes in fixEncoding (was breaking build)
- * ✅ Polish: No double fixEncoding calls
- * ✅ Polish: isWithinDateRange uses getDateStr helper
+ * V7.4 – WITH CSV EXPORT
+ * ✅ New: Export to CSV for Google Sheets
+ * ✅ Fixed: Invalid JS quotes in fixEncoding
  * ✅ Unified isMissing() check across all helpers
  * ✅ Multi-pattern buyer extraction
  * ✅ Expanded encoding fixes for mojibake
@@ -92,7 +95,7 @@ const fixEncoding = (str = "") => str
 // Extract buyer from text - multiple patterns (Upgrade B)
 const extractBuyer = (text = "") => {
   if (isMissing(text)) return null;
-  
+
   // Pattern priority order
   const patterns = [
     /on behalf of\s+([^.,;]+)/i,           // "on behalf of Company X"
@@ -102,7 +105,7 @@ const extractBuyer = (text = "") => {
     /for the benefit of\s+([^.,;]+)/i,     // "for the benefit of Company X"
     /retirement by\s+([^.,;]+)/i,          // "retirement by Company X"
   ];
-  
+
   for (const pattern of patterns) {
     const match = text.match(pattern);
     if (match) {
@@ -113,9 +116,12 @@ const extractBuyer = (text = "") => {
   return null;
 };
 
+<<<<<<< HEAD
 // Legacy alias for compatibility
 
 
+=======
+>>>>>>> 96325aa (export to CSV function)
 // Format date for display: "Oct 27, 2025"
 const formatFullDate = (dateStr) => {
   const d = parseDate(dateStr);
@@ -142,13 +148,13 @@ const getDateStr = (r) => {
 // Date range filter
 const isWithinDateRange = (r, dateRange) => {
   if (dateRange === "all") return true;
-  
+
   const dateStr = getDateStr(r);
   const retDate = parseDate(dateStr);
   if (!retDate) return dateRange === "all"; // Only include invalid dates when showing all time
-  
+
   const now = new Date();
-  
+
   if (dateRange === "12m") {
     const cutoff = new Date(now.getFullYear(), now.getMonth() - 12, now.getDate());
     return retDate >= cutoff;
@@ -224,10 +230,10 @@ const styles = {
   statValue: { fontSize: "1.5rem", fontWeight: 700 },
   card: { background: "white", borderRadius: 12, border: "1px solid #e2e8f0", boxShadow: "0 1px 3px rgba(0,0,0,0.05)", overflow: "hidden" },
   toolbar: { padding: "1rem 1.5rem", borderBottom: "1px solid #e2e8f0", display: "flex", gap: "1rem", alignItems: "center", flexWrap: "wrap" },
-  btn: (active) => ({ 
-    padding: "0.5rem 1rem", borderRadius: 6, border: "none", 
-    background: active ? "#0f172a" : "#f1f5f9", 
-    color: active ? "white" : "#64748b", 
+  btn: (active) => ({
+    padding: "0.5rem 1rem", borderRadius: 6, border: "none",
+    background: active ? "#0f172a" : "#f1f5f9",
+    color: active ? "white" : "#64748b",
     fontWeight: 600, cursor: "pointer", transition: "all 0.15s",
     display: "flex", alignItems: "center", gap: 6
   }),
@@ -237,8 +243,8 @@ const styles = {
   searchInput: { padding: "0.5rem 1rem 0.5rem 2.25rem", borderRadius: 6, border: "1px solid #cbd5e1", width: 220 },
   th: { padding: "0.875rem 1rem", textAlign: "left", fontSize: "0.7rem", textTransform: "uppercase", color: "#64748b", fontWeight: 600, letterSpacing: "0.05em", cursor: "pointer", userSelect: "none" },
   td: { padding: "1rem", borderTop: "1px solid #f1f5f9", fontSize: "0.875rem", verticalAlign: "top" },
-  badge: (bg, color) => ({ 
-    display: "inline-block", padding: "2px 8px", borderRadius: 4, 
+  badge: (bg, color) => ({
+    display: "inline-block", padding: "2px 8px", borderRadius: 4,
     fontSize: "0.65rem", fontWeight: 700, background: bg, color: color, marginRight: 4, marginTop: 4
   }),
   projectName: { fontSize: "0.875rem", fontWeight: 500, maxWidth: 250, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" },
@@ -333,8 +339,8 @@ const RegistryDashboard = () => {
   // --- FILTER & SORT ---
   const filtered = useMemo(() => {
     let data = buyers.filter(b => {
-      const matchesSearch = !search || 
-        b.name.toLowerCase().includes(search.toLowerCase()) || 
+      const matchesSearch = !search ||
+        b.name.toLowerCase().includes(search.toLowerCase()) ||
         b.projectTypes.some(t => t.toLowerCase().includes(search.toLowerCase()));
       const matchesView = viewMode === "all" || b.isTier1;
       return matchesSearch && matchesView;
@@ -344,13 +350,13 @@ const RegistryDashboard = () => {
     data.sort((a, b) => {
       let valA = a[sort.key];
       let valB = b[sort.key];
-      
+
       // Handle date sorting
       if (sort.key === "latestDate") {
         valA = parseDate(valA)?.getTime() || 0;
         valB = parseDate(valB)?.getTime() || 0;
       }
-      
+
       return sort.dir === "asc" ? valA - valB : valB - valA;
     });
 
@@ -369,6 +375,54 @@ const RegistryDashboard = () => {
     }));
   };
 
+  // --- EXPORT TO CSV ---
+  const exportToCSV = () => {
+    // CSV headers
+    const headers = [
+      "Company Name",
+      "Total Volume (tCO2e)",
+      "Retirement Events",
+      "Last Activity",
+      "Recent Project",
+      "Project ID",
+      "Project Types",
+      "Tags",
+      "Registry",
+      "Date Filter"
+    ];
+
+    // Build rows from filtered data (all filtered, not just current page)
+    const csvRows = filtered.map(b => [
+      `"${b.name.replace(/"/g, '""')}"`, // Escape quotes in names
+      b.totalVolume,
+      b.retirementCount,
+      `"${formatFullDate(b.latestDate)}"`, // Quote date (contains comma)
+      `"${(b.latestProject?.name || "N/A").replace(/"/g, '""')}"`,
+      b.latestProject?.id || "N/A",
+      `"${b.projectTypes.join(", ")}"`,
+      `"${b.tags.map(t => t.label).join(", ")}"`,
+      registry === "verra" ? "Verra" : "Climate Action Reserve",
+      DATE_RANGES.find(d => d.value === dateRange)?.label || dateRange
+    ]);
+
+    // Combine headers and rows
+    const csvContent = [
+      headers.join(","),
+      ...csvRows.map(row => row.join(","))
+    ].join("\n");
+
+    // Create and trigger download (BOM fixes encoding in Google Sheets)
+    const blob = new Blob(["\uFEFF" + csvContent], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `buyer-intelligence-${registry}-${dateRange}-${new Date().toISOString().split("T")[0]}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
+  };
+
   const SortIcon = ({ column }) => (
     <ArrowUpDown size={12} style={{ marginLeft: 4, opacity: sort.key === column ? 1 : 0.3 }} />
   );
@@ -377,7 +431,7 @@ const RegistryDashboard = () => {
   return (
     <div style={styles.wrap}>
       <div style={styles.container}>
-        
+
         {/* HEADER */}
         <div style={styles.header}>
           <div style={styles.headerLeft}>
@@ -394,7 +448,7 @@ const RegistryDashboard = () => {
             </div>
             <div>
               <div style={styles.statLabel}>Volume (tCO₂e)</div>
-              <div style={{...styles.statValue, color: "#16a34a"}}>
+              <div style={{ ...styles.statValue, color: "#16a34a" }}>
                 {(filtered.reduce((a, c) => a + c.totalVolume, 0) / 1_000_000).toFixed(1)}M
               </div>
             </div>
@@ -407,7 +461,7 @@ const RegistryDashboard = () => {
 
         {/* MAIN CARD */}
         <div style={styles.card}>
-          
+
           {/* TOOLBAR */}
           <div style={styles.toolbar}>
             {/* Registry Toggle */}
@@ -434,13 +488,27 @@ const RegistryDashboard = () => {
               </button>
               <div style={styles.searchWrap}>
                 <Search size={16} style={styles.searchIcon} />
-                <input 
-                  placeholder="Search companies..." 
-                  value={search} 
+                <input
+                  placeholder="Search companies..."
+                  value={search}
                   onChange={e => setSearch(e.target.value)}
-                  style={styles.searchInput} 
+                  style={styles.searchInput}
                 />
               </div>
+              <button
+                onClick={exportToCSV}
+                style={{
+                  ...styles.btn(false),
+                  background: "#16a34a",
+                  color: "white",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: 6
+                }}
+                title="Export to CSV for Google Sheets"
+              >
+                <Download size={14} /> Export
+              </button>
             </div>
           </div>
 
@@ -450,10 +518,10 @@ const RegistryDashboard = () => {
               <tr style={{ background: "#f8fafc" }}>
                 <th style={styles.th}>Buyer Entity</th>
                 <th style={styles.th}>Recent Project</th>
-                <th style={{...styles.th, textAlign: "right"}} onClick={() => handleSort("totalVolume")}>
+                <th style={{ ...styles.th, textAlign: "right" }} onClick={() => handleSort("totalVolume")}>
                   Volume <SortIcon column="totalVolume" />
                 </th>
-                <th style={{...styles.th, textAlign: "center"}} onClick={() => handleSort("retirementCount")}>
+                <th style={{ ...styles.th, textAlign: "center" }} onClick={() => handleSort("retirementCount")}>
                   Events <SortIcon column="retirementCount" />
                 </th>
                 <th style={styles.th} onClick={() => handleSort("latestDate")}>
@@ -492,11 +560,11 @@ const RegistryDashboard = () => {
                         </>
                       )}
                     </td>
-                    <td style={{...styles.td, textAlign: "right", fontWeight: 600, fontFamily: "monospace"}}>
+                    <td style={{ ...styles.td, textAlign: "right", fontWeight: 600, fontFamily: "monospace" }}>
                       {c.totalVolume.toLocaleString()}
                     </td>
-                    <td style={{...styles.td, textAlign: "center"}}>{c.retirementCount}</td>
-                    <td style={{...styles.td, color: "#64748b"}}>{formatFullDate(c.latestDate)}</td>
+                    <td style={{ ...styles.td, textAlign: "center" }}>{c.retirementCount}</td>
+                    <td style={{ ...styles.td, color: "#64748b" }}>{formatFullDate(c.latestDate)}</td>
                     <td style={styles.td}>
                       {c.projectTypes.map(t => (
                         <span key={t} style={styles.badge("#f1f5f9", "#475569")}>{t}</span>
@@ -510,20 +578,20 @@ const RegistryDashboard = () => {
 
           {/* PAGINATION */}
           <div style={styles.pagination}>
-            <button 
-              disabled={page === 1} 
-              onClick={() => setPage(p => p - 1)} 
-              style={{...styles.pageBtn, opacity: page === 1 ? 0.3 : 1}}
+            <button
+              disabled={page === 1}
+              onClick={() => setPage(p => p - 1)}
+              style={{ ...styles.pageBtn, opacity: page === 1 ? 0.3 : 1 }}
             >
               <ChevronLeft size={20} />
             </button>
             <span style={{ fontSize: "0.875rem", color: "#64748b" }}>
               Page {page} of {totalPages}
             </span>
-            <button 
-              disabled={page === totalPages} 
-              onClick={() => setPage(p => p + 1)} 
-              style={{...styles.pageBtn, opacity: page === totalPages ? 0.3 : 1}}
+            <button
+              disabled={page === totalPages}
+              onClick={() => setPage(p => p + 1)}
+              style={{ ...styles.pageBtn, opacity: page === totalPages ? 0.3 : 1 }}
             >
               <ChevronRight size={20} />
             </button>
