@@ -114,12 +114,11 @@ const extractBuyer = (text = "") => {
   return null;
 };
 
-<<<<<<< HEAD
+
 // Legacy alias for compatibility
 
 
-=======
->>>>>>> 96325aa (export to CSV function)
+
 // Format date for display: "Oct 27, 2025"
 const formatFullDate = (dateStr) => {
   const d = parseDate(dateStr);
