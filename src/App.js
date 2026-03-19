@@ -275,11 +275,25 @@ const RegistryDashboard = () => {
 
   // --- DATA PROCESSING ---
   const buyers = useMemo(() => {
-    const raw = registry === "verra"
-      ? verraData
-      : registry === "planvivo"
-        ? (planVivoData.retirements || planVivoData || [])
-        : (carData.retirements || carData || []);
+    const raw = (() => {
+      const data = registry === "verra"
+        ? verraData
+        : registry === "planvivo"
+          ? (planVivoData.retirements || planVivoData || [])
+          : (carData.retirements || carData || []);
+
+      if (registry !== "planvivo") return data;
+
+      return data.filter((r, idx, arr) =>
+        arr.findIndex(x =>
+          x.retirement_date === r.retirement_date &&
+          x.account === r.account &&
+          x.retirement_quantity === r.retirement_quantity &&
+          x.project === r.project
+        ) === idx
+      );
+    })();
+
     const map = {};
 
     raw.forEach((r) => {
