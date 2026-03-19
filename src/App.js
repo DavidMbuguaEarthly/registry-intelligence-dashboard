@@ -8,6 +8,7 @@ import {
 
 import verraData from "./data/verra_retirements.json";
 import carData from "./data/climate_action_reserve_retirements.json";
+import planVivoData from "./data/plan_vivo_retirements.json";
 
 /**
  * V7.4 – WITH CSV EXPORT
@@ -178,18 +179,22 @@ const getBuyerIdentity = (r, registry) => {
   if (registry === "verra") {
     const details = r.retirement_details || r["Retirement Details"] || "";
     const beneficiary = r.retirement_beneficiary || r["Retirement Beneficiary"] || "";
-    // Combine fields for better extraction hit rate
     const combined = `${beneficiary} ${details}`;
-    const extracted = extractBuyer(combined); // already fixEncoded
-    // Return extracted buyer, or beneficiary if valid, otherwise empty for filtering
+    const extracted = extractBuyer(combined);
     if (extracted) return extracted;
     if (!isMissing(beneficiary)) return fixEncoding(beneficiary);
+    return "";
+  } else if (registry === "planvivo") {
+    const beneficialOwner = r.beneficial_owner || "";
+    const account = r.account || "";
+    if (!isMissing(beneficialOwner)) return fixEncoding(beneficialOwner);
+    if (!isMissing(account)) return fixEncoding(account);
     return "";
   } else {
     // CAR
     const details = r.retirement_details || r["Retirement Reason Details"] || "";
     const holder = r.account_holder || r["Account Holder"] || "";
-    const extracted = extractBuyer(details); // already fixEncoded
+    const extracted = extractBuyer(details);
     if (extracted) return extracted;
     if (!isMissing(holder)) return fixEncoding(holder);
     return "";
@@ -200,6 +205,8 @@ const getBuyerIdentity = (r, registry) => {
 const getVolume = (r, registry) => {
   if (registry === "verra") {
     return normalizeVolume(r.quantity_issued || r["Quantity Issued"]);
+  } else if (registry === "planvivo") {
+    return normalizeVolume(r.retirement_quantity);
   }
   return normalizeVolume(r.quantity_tonnes || r["Quantity of Offset Credits"]);
 };
@@ -207,9 +214,9 @@ const getVolume = (r, registry) => {
 // Get project info
 const getProjectInfo = (r) => {
   return {
-    name: r.project_name || r["Name"] || r["Project Name"] || "Unknown Project",
+    name: r.project_name || r["Name"] || r["Project Name"] || r.project || "Unknown Project",
     id: r.project_id || r["ID"] || r["Project ID"] || "N/A",
-    type: (r.project_type || r["Project Type"] || "Unknown").split("-")[0].split("(")[0].trim()
+    type: (r.project_type || r["Project Type"] || r.standard || "Unknown").split("-")[0].split("(")[0].trim()
   };
 };
 
@@ -268,7 +275,11 @@ const RegistryDashboard = () => {
 
   // --- DATA PROCESSING ---
   const buyers = useMemo(() => {
-    const raw = registry === "verra" ? verraData : (carData.retirements || carData || []);
+    const raw = registry === "verra"
+      ? verraData
+      : registry === "planvivo"
+        ? (planVivoData.retirements || planVivoData || [])
+        : (carData.retirements || carData || []);
     const map = {};
 
     raw.forEach((r) => {
@@ -398,7 +409,7 @@ const RegistryDashboard = () => {
       b.latestProject?.id || "N/A",
       `"${b.projectTypes.join(", ")}"`,
       `"${b.tags.map(t => t.label).join(", ")}"`,
-      registry === "verra" ? "Verra" : "Climate Action Reserve",
+      registry === "verra" ? "Verra" : registry === "planvivo" ? "Plan Vivo" : "Climate Action Reserve",
       DATE_RANGES.find(d => d.value === dateRange)?.label || dateRange
     ]);
 
@@ -451,7 +462,7 @@ const RegistryDashboard = () => {
             </div>
             <div>
               <div style={styles.statLabel}>Source</div>
-              <div style={styles.statValue}>{registry === "verra" ? "Verra" : "CAR"}</div>
+              <div style={styles.statValue}>{registry === "verra" ? "Verra" : registry === "planvivo" ? "Plan Vivo" : "CAR"}</div>
             </div>
           </div>
         </div>
@@ -465,6 +476,7 @@ const RegistryDashboard = () => {
             <div style={{ display: "flex", gap: 8 }}>
               <button onClick={() => setRegistry("verra")} style={styles.btn(registry === "verra")}>Verra</button>
               <button onClick={() => setRegistry("car")} style={styles.btn(registry === "car")}>CAR</button>
+              <button onClick={() => setRegistry("planvivo")} style={styles.btn(registry === "planvivo")}>Plan Vivo</button>
             </div>
 
             {/* Date Range */}
